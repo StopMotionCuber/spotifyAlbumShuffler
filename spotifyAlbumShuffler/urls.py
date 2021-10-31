@@ -19,5 +19,6 @@ from .spotify import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('album/', views.album_render)
+    path('album/', views.album_render),
+    path('shuffle/', views.album_shuffle)
 ]
