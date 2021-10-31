@@ -1,0 +1,25 @@
+{% load spotify_extras %}
+
+<html lang="en">
+    <head>
+        <title>Spotify Album Shuffler</title>
+    </head>
+    <body>
+        <h1>Spotify Album Shuffler</h1>
+        <h3>This is a WIP for shuffling Django Albums. Here you can see all playlists that a user has</h3>
+        <table>
+            <tr>
+                <th>Playlist Name</th>
+                <th>Back-To-Back?</th>
+                <th>Albums detected</th>
+            </tr>
+            {% for playlist in playlists %}
+                <tr>
+                    <td>{{ playlist.playlist_name }}</td>
+                    <td>{{ playlist.back_to_back|yesno:"Yes,No" }}</td>
+                    <td>{{ playlist|album_names_from_playlist|join:", " }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </body>
+</html>
