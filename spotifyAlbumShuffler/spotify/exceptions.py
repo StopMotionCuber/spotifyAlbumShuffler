@@ -1,0 +1,4 @@
+
+
+class InvalidActionException(Exception):
+    pass

@@ -1,8 +1,10 @@
+import random
 from dataclasses import dataclass, field
 from typing import List
 
 import spotipy
 
+from spotifyAlbumShuffler.spotify.exceptions import InvalidActionException
 from spotifyAlbumShuffler.spotify.models import SpotifyPlaylist, SpotifyUser, SpotifyAlbum, SpotifyTrack
 
 
@@ -134,3 +136,21 @@ def get_user(user_id):
         to_return = SpotifyUser(spotify_user_id=user_id)
         to_return.save()
     return to_return
+
+
+def shuffle_playlist(client: spotipy.Spotify, playlist: SpotifyPlaylist):
+    if not playlist.back_to_back:
+        raise InvalidActionException()
+    albums = list(playlist.albums_included.all())
+    random.shuffle(albums)
+    tracklist = []
+    for album in albums:
+        assert isinstance(album, SpotifyAlbum)
+        album_tracks = album.tracks.order_by("position_in_album").values_list("spotify_track_id", flat=True)
+        tracklist.extend(album_tracks)
+    batch_size = 100
+    client.playlist_replace_items(playlist.spotify_playlist_id, tracklist[:batch_size])
+    for i in range(batch_size, len(tracklist), batch_size):
+        batch = tracklist[i:i + batch_size]
+        client.playlist_add_items(playlist.spotify_playlist_id, batch)
+

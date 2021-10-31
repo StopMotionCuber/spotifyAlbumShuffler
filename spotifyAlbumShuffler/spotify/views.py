@@ -25,3 +25,10 @@ def album_render(request):
         'playlists': playlists_list,
     }
     return HttpResponse(template.render(context, request))
+
+
+def album_shuffle(request):
+    playlists_list = SpotifyPlaylist.objects.filter(back_to_back=True).all()
+    for playlist in playlists_list:
+        logic.shuffle_playlist(client, playlist)
+    return HttpResponse("Shuffled playlists")
