@@ -2,27 +2,31 @@ from django.db import models
 
 
 class SpotifyUser(models.Model):
-    id = models.AutoField()
-    spotify_user_id = models.CharField(100, unique=True)
+    id = models.AutoField(primary_key=True)
+    spotify_user_id = models.CharField(max_length=100, unique=True)
 
 
 class SpotifyPlaylist(models.Model):
-    id = models.AutoField()
-    spotify_playlist_id = models.CharField(50, unique=True)
+    id = models.AutoField(primary_key=True)
+    spotify_playlist_id = models.CharField(max_length=50, unique=True)
     owner = models.ForeignKey(SpotifyUser, on_delete=models.CASCADE)
     back_to_back = models.BooleanField()
-    last_snapshot = models.CharField(100)
+    enabled = models.BooleanField()
+    last_snapshot = models.CharField(max_length=100)
     albums_included = models.ManyToManyField("SpotifyAlbum")
-    playlist_name = models.CharField(200)
-    playlist_picture_uri = models.URLField()
+    playlist_name = models.CharField(max_length=200)
+    playlist_picture = models.BinaryField(null=True, blank=True)
 
 
 class SpotifyAlbum(models.Model):
-    id = models.AutoField()
-    spotify_album_id = models.CharField(50, unique=True)
-    album_name = models.CharField(200)
-    album_cover = models.URLField()
+    id = models.AutoField(primary_key=True)
+    spotify_album_id = models.CharField(max_length=50, unique=True)
+    album_name = models.CharField(max_length=200)
+    album_cover = models.BinaryField(null=True, blank=True)
 
 
-class SpotifyTokenInformation(models.Model):
-    id = models.AutoField()
+class SpotifyTrack(models.Model):
+    id = models.AutoField(primary_key=True)
+    related_album = models.ForeignKey(SpotifyAlbum, on_delete=models.CASCADE, related_name="tracks")
+    spotify_track_id = models.CharField(max_length=50, unique=True)
+    position_in_album = models.IntegerField()
