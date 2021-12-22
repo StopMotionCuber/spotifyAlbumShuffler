@@ -5,9 +5,11 @@ from django.shortcuts import render
 # Create your views here.
 from django.template import loader
 from spotipy import SpotifyOAuth
+from rest_framework import viewsets, permissions
 
 from spotifyAlbumShuffler.spotify import logic
 from spotifyAlbumShuffler.spotify.models import SpotifyPlaylist
+from spotifyAlbumShuffler.spotify.serializers import SpotifyPlaylistSerializer
 
 scopes = ["playlist-modify-private", "playlist-read-private", "playlist-modify-public"]
 client = spotipy.Spotify(
@@ -15,6 +17,12 @@ client = spotipy.Spotify(
         scope=scopes
     )
 )
+
+
+class SpotifyPlaylistViewSet(viewsets.ModelViewSet):
+    serializer_class = SpotifyPlaylistSerializer
+    queryset = SpotifyPlaylist.objects.all()
+    permission_classes = [permissions.AllowAny]
 
 
 def album_render(request):
