@@ -33,27 +33,38 @@ class InternalPlaylist:
         self.related_albums = []
         album_finished = True
         album_idx = 1
-        for song in songs:
-            song = song['track']
-            if album_finished:
-                album_idx = 0
-                try:
-                    cover_url = song['album']['images'][0]
-                except (KeyError, IndexError):
-                    cover_url = None
-                self.related_albums.append(InternalAlbum(
-                    id=song['album']['id'],
-                    name=song['album']['name'],
-                    cover_url=cover_url
-                ))
-                album_finished = False
-            album_idx += 1
-            if song["album"]['id'] != self.related_albums[-1].id or song["track_number"] != album_idx:
-                return False
-            self.related_albums[-1].tracks.append(song['id'])
-            if song["album"]["total_tracks"] == album_idx:
-                album_finished = True
-        return album_finished and len(self.related_albums) > 1
+        # Outer loop to go through all pages lazily
+        # We are doing this lazily as first page might already
+        # reveal that a playlist is not backtoback
+        while True:
+            # Inner loop for all songs per page
+            for song in songs:
+                song = song['track']
+                if album_finished:
+                    album_idx = 0
+                    try:
+                        cover_url = song['album']['images'][0]
+                    except (KeyError, IndexError):
+                        cover_url = None
+                    self.related_albums.append(InternalAlbum(
+                        id=song['album']['id'],
+                        name=song['album']['name'],
+                        cover_url=cover_url
+                    ))
+                    album_finished = False
+                album_idx += 1
+                if song["album"]['id'] != self.related_albums[-1].id or song["track_number"] != album_idx:
+                    return False
+                self.related_albums[-1].tracks.append(song['id'])
+                if song["album"]["total_tracks"] == album_idx:
+                    album_finished = True
+            if not response['next']:
+                return album_finished and len(self.related_albums) > 1
+            response = client.next(response)
+            songs = client.current_user_playlists()['items']
+
+
+
 
 
 def fill_playlist_information(client: spotipy.Spotify):
