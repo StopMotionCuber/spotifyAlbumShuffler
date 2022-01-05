@@ -27,9 +27,6 @@ class InternalPlaylist:
     def is_backtoback(self, client: spotipy.Spotify):
         response = client.playlist_items(self._playlist_id)
         songs = response['items']
-        while response['next']:
-            response = client.next(response)
-            songs.extend(client.current_user_playlists()['items'])
         self.related_albums = []
         album_finished = True
         album_idx = 1
@@ -61,8 +58,7 @@ class InternalPlaylist:
             if not response['next']:
                 return album_finished and len(self.related_albums) > 1
             response = client.next(response)
-            songs = client.current_user_playlists()['items']
-
+            songs = response['items']
 
 
 
