@@ -61,9 +61,7 @@ class InternalPlaylist:
             songs = response['items']
 
 
-
-
-def fill_playlist_information(client: spotipy.Spotify):
+def refresh_user_playlists(client: spotipy.Spotify):
     user_id = client.current_user()['id']
     user_object = get_user(user_id)
     response = client.current_user_playlists()
@@ -74,33 +72,37 @@ def fill_playlist_information(client: spotipy.Spotify):
     # Get current playlists of that user
     available_playlists = SpotifyPlaylist.objects.filter(
         owner=user_object
-    ).values_list("spotify_playlist_id", flat=True)
+    ).values_list("spotify_playlist_id", "last_snapshot")
+    available_playlists = {
+        item["spotify_playlist_id"]: item["last_snapshot"] for item in available_playlists
+    }
     new_playlists = []
     for playlist in all_playlists:
         if playlist['owner']['id'] != user_id or playlist['id'] in available_playlists:
-            continue
-        new_playlists.append(create_playlist(playlist, client, user_object))
+            if playlist['snapshot_id'] == available_playlists[playlist['id']]:
+                continue
+        new_playlists.append(create_or_update_playlist(playlist, client, user_object))
 
 
-def create_playlist(playlist, client, owner):
+def create_or_update_playlist(playlist, client, owner):
     playlist_obj = InternalPlaylist(playlist['id'])
     b2bstate = playlist_obj.is_backtoback(client)
-    to_return = SpotifyPlaylist(
-        spotify_playlist_id=playlist['id'],
-        owner=owner,
-        back_to_back=b2bstate,
-        last_snapshot=playlist['snapshot_id'],
-        playlist_name=playlist['name'],
-        enabled=False
+    spotify_playlist, created = SpotifyPlaylist.objects.get_or_create(
+        spotify_playlist_id=playlist['id']
     )
-    to_return.save()
+    spotify_playlist.owner = owner
+    spotify_playlist.back_to_back = b2bstate
+    spotify_playlist.last_snapshot = playlist['snapshot_id']
+    spotify_playlist.playlist_name = playlist['name']
+    spotify_playlist.save()
     if b2bstate:
         # Include albums, this is not necessary for non-b2b playlists as they don't get used
         related_albums = fill_album_information(playlist_obj)
         album_qs = SpotifyAlbum.objects.filter(spotify_album_id__in=related_albums)
-        to_return.albums_included.set(album_qs.all())
-        to_return.save()
-    return to_return
+        # Duplicate management???
+        spotify_playlist.albums_included.set(album_qs.all())
+        spotify_playlist.save()
+    return spotify_playlist
 
 
 def fill_album_information(playlist: InternalPlaylist):

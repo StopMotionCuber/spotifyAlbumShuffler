@@ -26,5 +26,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('album/', views.album_render),
     path('shuffle/', views.album_shuffle),
+    path('login/', views.login),
+    path('callback/', views.authorize),
+    path('status/', views.status),
     path('', include(router.urls))
 ]
