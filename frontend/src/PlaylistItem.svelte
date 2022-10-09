@@ -7,9 +7,9 @@
 
 <div class="b2b-item">
     <div class="b2b-artwork">
-        <img alt="{playlistName} Cover Art" class="cover-art" src="{imgSource}" height="150" width="150"/>
-        <div class="b2b-refresh"><img src="resources/refresh.svg"/></div>
-        <div class="b2b-shuffle"><img src="resources/shuffle.svg"></div>
+        <img loading="lazy" alt="{playlistName} Cover Art" class="cover-art" src="{imgSource}" height="120" width="120"/>
+        <div class="b2b-refresh icon"><img src="resources/refresh.svg"/></div>
+        <div class="b2b-shuffle icon"><img src="resources/shuffle.svg"></div>
     </div>
-    <div class="b2b-playlisttitle">{playlistName}</div>
+    <div class="b2b-playlisttitle"><div>{playlistName}</div></div>
 </div>

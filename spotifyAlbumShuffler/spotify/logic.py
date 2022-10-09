@@ -74,23 +74,28 @@ def refresh_user_playlists(client: spotipy.Spotify):
         owner=user_object
     ).values_list("spotify_playlist_id", "last_snapshot")
     available_playlists = {
-        item["spotify_playlist_id"]: item["last_snapshot"] for item in available_playlists
+        item[0]: item[1] for item in available_playlists
     }
-    new_playlists = []
     for playlist in all_playlists:
-        if playlist['owner']['id'] != user_id or playlist['id'] in available_playlists:
-            if playlist['snapshot_id'] == available_playlists[playlist['id']]:
-                continue
-        new_playlists.append(create_or_update_playlist(playlist, client, user_object))
+        if playlist['owner']['id'] != user_id:
+            continue
+        if playlist['id'] in available_playlists and playlist['snapshot_id'] == available_playlists[playlist['id']]:
+            continue
+        create_or_update_playlist(playlist, client, user_object)
 
 
 def create_or_update_playlist(playlist, client, owner):
     playlist_obj = InternalPlaylist(playlist['id'])
     b2bstate = playlist_obj.is_backtoback(client)
     spotify_playlist, created = SpotifyPlaylist.objects.get_or_create(
-        spotify_playlist_id=playlist['id']
+        spotify_playlist_id=playlist['id'],
+        defaults={
+            "owner": owner,
+            "back_to_back": b2bstate,
+            "last_snapshot": playlist['snapshot_id'],
+            "playlist_name": playlist['name'],
+        }
     )
-    spotify_playlist.owner = owner
     spotify_playlist.back_to_back = b2bstate
     spotify_playlist.last_snapshot = playlist['snapshot_id']
     spotify_playlist.playlist_name = playlist['name']

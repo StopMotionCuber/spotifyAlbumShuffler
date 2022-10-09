@@ -49,9 +49,9 @@ def refresh_image(playlist_id: str):
 def pick_image(img_list):
     if not img_list:
         return None
-    for img in reversed(img_list):
-        if img['height'] >= 300:
-            return img['url']
+    # for img in reversed(img_list):
+    #     if img['height'] >= 300:
+    #         return img['url']
     return img_list[0]['url']
 
 
@@ -65,11 +65,13 @@ def batch_refresh_image(user_id: str):
         response = client.next(response)
         all_playlists.extend(response['items'])
     # Batch all updates into single transaction
-    with transaction.atomic:
+    with transaction.atomic():
         for playlist in all_playlists:
-
-            db_object = SpotifyPlaylist.objects.get(spotify_playlist_id=playlist['id'])
-            if db_object is None or 'images' not in playlist:
+            try:
+                db_object = SpotifyPlaylist.objects.get(spotify_playlist_id=playlist['id'])
+            except SpotifyPlaylist.DoesNotExist:
+                continue
+            if 'images' not in playlist:
                 continue
             picture_url = pick_image(playlist['images'])
             if picture_url is None:

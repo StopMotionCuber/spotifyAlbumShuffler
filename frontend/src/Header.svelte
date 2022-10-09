@@ -1,5 +1,6 @@
 <script>
-    let loggedIn = false;
+    export let loggedIn = false;
+    export let username = "";
 </script>
 
 <header>
@@ -7,12 +8,14 @@
     <img class="github-logo" src="resources/GitHub-Mark-Light-64px.png" alt="GitHub logo" height="64" width="64"/>
     <div class="login-to-spotify">
         {#if loggedIn === false}
+            <a href="http://localhost/login/">
             <span class="account-text">
                 Connect Spotify Account
             </span>
+            </a>
         {:else }
             <span class="account-text">
-                Disconnect Spotify Account
+                Hello { username }
             </span>
         {/if}
         <img class="spotify-logo" src="resources/Spotify_Icon_RGB_Green.png" height="48" width="48">

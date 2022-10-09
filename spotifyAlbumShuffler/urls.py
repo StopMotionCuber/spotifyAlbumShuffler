@@ -23,11 +23,11 @@ router = routers.SimpleRouter()
 router.register('playlists', SpotifyPlaylistViewSet)
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
     path('album/', views.album_render),
     path('shuffle/', views.album_shuffle),
     path('login/', views.login),
     path('callback/', views.authorize),
-    path('status/', views.status),
-    path('', include(router.urls))
+    path('api/status/', views.status),
+    path('api/', include(router.urls)),
+    path('api/refresh/', views.refresh_playlists)
 ]

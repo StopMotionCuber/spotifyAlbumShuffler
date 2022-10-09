@@ -6,10 +6,11 @@ from django.shortcuts import render, redirect
 
 # Create your views here.
 from django.template import loader
+from rest_framework.exceptions import PermissionDenied
 from spotipy import SpotifyOAuth
 from rest_framework import viewsets, permissions
 
-from spotifyAlbumShuffler.spotify import logic
+from spotifyAlbumShuffler.spotify import logic, tasks
 from spotifyAlbumShuffler.spotify.models import SpotifyPlaylist, SpotifyUser
 from spotifyAlbumShuffler.spotify.serializers import SpotifyPlaylistSerializer
 
@@ -25,6 +26,13 @@ class SpotifyPlaylistViewSet(viewsets.ModelViewSet):
     serializer_class = SpotifyPlaylistSerializer
     queryset = SpotifyPlaylist.objects.all()
     permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        try:
+            user_id = self.request.session['user_id']
+        except KeyError:
+            raise PermissionDenied(detail="User not authenticated")
+        return SpotifyPlaylist.objects.filter(owner__spotify_user_id=user_id)
 
 
 def status(request):
@@ -45,8 +53,10 @@ def status(request):
 
 
 def login(request):
+    if 'user_id' in request.session:
+        return redirect("http://localhost")
     spotify_auth = oauth.spotify
-    redirect_uri = "http://127.0.0.1:8000/callback/"
+    redirect_uri = "http://localhost/callback/"
     return spotify_auth.authorize_redirect(request, redirect_uri)
 
 
@@ -64,8 +74,18 @@ def authorize(request):
         user.display_name = data['display_name']
     user.save()
     request.session['user_id'] = data['id']
-    playlists_for_user.delay(user.spotify_user_id)
-    return redirect("http://localhost:5000")
+    playlists_for_user(user.spotify_user_id)
+    tasks.batch_refresh_image(user.spotify_user_id)
+    return redirect("http://localhost")
+
+
+def refresh_playlists(request):
+    try:
+        user_id = request.session['user_id']
+    except KeyError:
+        raise PermissionDenied(detail="User not authenticated")
+    playlists_for_user(user_id)
+    return HttpResponse(status=204)
 
 
 def album_render(request):
