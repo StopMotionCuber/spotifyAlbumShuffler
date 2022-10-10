@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-)0*l6oqgqz$&43h99vl=ex4yz#6pm$6=e)-!#zn3i9etxn!aaz'
+SECRET_KEY = load_dotenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -135,6 +136,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTHLIB_OAUTH_CLIENTS = {
     'spotify': {
         'client_id': 'd448d6d6af4d4efeb07f1ba34ae58a2b',
+        'client_secret': load_dotenv("SPOTIFY_CLIENT_SECRET"),
         'access_token_url': 'https://accounts.spotify.com/api/token',
         'access_token_params': None,
         'authorize_url': 'https://accounts.spotify.com/authorize',
