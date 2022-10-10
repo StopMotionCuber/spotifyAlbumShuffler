@@ -13,12 +13,21 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from rest_framework import routers
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from .spotify import views
+from .spotify.views import SpotifyPlaylistViewSet
+
+router = routers.SimpleRouter()
+router.register('playlists', SpotifyPlaylistViewSet)
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
     path('album/', views.album_render),
-    path('shuffle/', views.album_shuffle)
+    path('shuffle/', views.album_shuffle),
+    path('login/', views.login),
+    path('callback/', views.authorize),
+    path('api/status/', views.status),
+    path('api/', include(router.urls)),
+    path('api/refresh/', views.refresh_playlists)
 ]

@@ -39,9 +39,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -50,6 +52,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = 'spotifyAlbumShuffler.urls'
 
@@ -126,3 +131,16 @@ STATIC_URL = '/static/'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTHLIB_OAUTH_CLIENTS = {
+    'spotify': {
+        'client_id': 'd448d6d6af4d4efeb07f1ba34ae58a2b',
+        'access_token_url': 'https://accounts.spotify.com/api/token',
+        'access_token_params': None,
+        'authorize_url': 'https://accounts.spotify.com/authorize',
+        'authorize_params': None,
+        'api_base_url': 'https://api.spotify.com/v1/',
+        'client_kwargs': {'scope': 'playlist-modify-private playlist-read-private playlist-modify-public'}
+    }
+}
+
