@@ -135,7 +135,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTHLIB_OAUTH_CLIENTS = {
     'spotify': {
         'client_id': 'd448d6d6af4d4efeb07f1ba34ae58a2b',
-        'client_secret': '0aa2f86f7ec54afb9c7e7850205dcc57',
         'access_token_url': 'https://accounts.spotify.com/api/token',
         'access_token_params': None,
         'authorize_url': 'https://accounts.spotify.com/authorize',
