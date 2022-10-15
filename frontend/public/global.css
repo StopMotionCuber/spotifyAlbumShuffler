@@ -231,7 +231,7 @@ h3 {
 }
 
 .modal {
-  display: none; /* Hidden by default */
+  display: block;
   position: fixed; /* Stay in place */
   z-index: 1; /* Sit on top */
   padding-top: 100px; /* Location of the box */
@@ -242,6 +242,20 @@ h3 {
   overflow: auto; /* Enable scroll if needed */
   background-color: rgb(0,0,0); /* Fallback color */
   background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+.table-specifier {
+  font-weight: bold;
+}
+
+.grid-table {
+  grid-template-rows: 1fr 1fr; /* NEW */
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 1rem;
+  row-gap: 0;
+  margin-left: 20px;
+  align-items: center;
 }
 
 .visible {
@@ -273,4 +287,8 @@ h3 {
 .modal-container {
   display: flex;
   flex-direction: row;
+  margin-bottom: 12px;
+}
+
+.button-area {
 }
