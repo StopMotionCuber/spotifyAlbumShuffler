@@ -1,12 +1,10 @@
-import uuid
-
 import spotipy
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 
 # Create your views here.
 from django.template import loader
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, MethodNotAllowed
 from spotipy import SpotifyOAuth
 from rest_framework import viewsets, permissions
 
@@ -22,10 +20,19 @@ oauth = OAuth()
 oauth.register("spotify")
 
 
-class SpotifyPlaylistViewSet(viewsets.ModelViewSet):
+class SpotifyPlaylistViewSet(viewsets.GenericViewSet,
+                             viewsets.mixins.RetrieveModelMixin,
+                             viewsets.mixins.ListModelMixin,
+                             viewsets.mixins.UpdateModelMixin):
     serializer_class = SpotifyPlaylistSerializer
     queryset = SpotifyPlaylist.objects.all()
     permission_classes = [permissions.AllowAny]
+
+    def update(self, *args, **kwargs):
+        raise MethodNotAllowed("PUT", detail="Use PATCH")
+
+    def partial_update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs, partial=True)
 
     def get_queryset(self):
         try:
@@ -69,9 +76,8 @@ def authorize(request):
     user, created = SpotifyUser.objects.get_or_create(
         spotify_user_id=data['id']
     )
-    if created:
-        user.token = token
-        user.display_name = data['display_name']
+    user.display_name = data['display_name']
+    user.token = token
     user.save()
     request.session['user_id'] = data['id']
     playlists_for_user(user.spotify_user_id)
