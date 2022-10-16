@@ -17,7 +17,7 @@ export async function fetchPlaylists() {
 }
 
 
-function add_playlist(playlist) {
+export function add_playlist(playlist) {
   const id = playlist["id"]
   playlistsStore[id] = {
     "last_snapshot": playlist["last_snapshot"],
@@ -27,6 +27,8 @@ function add_playlist(playlist) {
     "albums": playlist["albums_included"],
     "back_to_back": playlist["back_to_back"],
     "enabled": playlist["enabled"],
-    "picture": playlist["playlist_picture_url"]
+    "picture": playlist["playlist_picture_url"],
+    "hour": playlist["playlist_schedule_hour"],
+    "minute": playlist["playlist_schedule_minute"]
   }
 }

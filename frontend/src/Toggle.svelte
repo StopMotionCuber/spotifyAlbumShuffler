@@ -1,14 +1,9 @@
 <script>
-
-  export let value = false;
+  export let value;
 
 
 </script>
 
-<label class="switch">
-  <input type="checkbox" on:click bind:checked="{value}">
-  <span class="slider round"></span>
-</label>
 
 <style>
   .switch {
