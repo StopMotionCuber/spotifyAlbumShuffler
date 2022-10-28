@@ -1,4 +1,7 @@
+import asyncio
+
 import spotipy
+from asgiref.sync import sync_to_async
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 
@@ -80,8 +83,6 @@ def authorize(request):
     user.token = token
     user.save()
     request.session['user_id'] = data['id']
-    playlists_for_user(user.spotify_user_id)
-    tasks.batch_refresh_image(user.spotify_user_id)
     return redirect("http://localhost")
 
 
@@ -91,6 +92,7 @@ def refresh_playlists(request):
     except KeyError:
         raise PermissionDenied(detail="User not authenticated")
     playlists_for_user(user_id)
+    tasks.batch_refresh_image(user_id)
     return HttpResponse(status=204)
 
 

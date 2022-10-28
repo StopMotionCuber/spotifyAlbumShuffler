@@ -1,9 +1,11 @@
 import logging
+import zoneinfo
 
 from celery.schedules import crontab
 from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db import models
+from django.db import models, IntegrityError
+from django_celery_beat.models import CrontabSchedule, PeriodicTask
 
 from spotifyAlbumShuffler.celery import app
 
@@ -40,15 +42,30 @@ class SpotifyPlaylist(models.Model):
         logging.debug("Calling save method for SpotifyPlaylist")
         super().save(force_insert, force_update, using, update_fields)
         if self.enabled:
-            from spotifyAlbumShuffler.spotify.tasks import album_shuffle
-            app.add_periodic_task(
-                schedule=crontab(hour=self.playlist_schedule_hour, minute=self.playlist_schedule_minute),
-                sig=album_shuffle.s(self.spotify_playlist_id),
-                name=f"album-shuffle-{self.id}",
+            from spotifyAlbumShuffler.spotify.tasks import debug_task
+            schedule, _ = CrontabSchedule.objects.get_or_create(
+                minute='*',
+                hour='*',
+                day_of_week='*',
+                day_of_month='*',
+                month_of_year='*'
             )
+            try:
+                periodic_task = PeriodicTask.objects.get(
+                    name=f"album-shuffle-{self.id}"
+                )
+            except PeriodicTask.DoesNotExist:
+                periodic_task = PeriodicTask(
+                    name=f"album-shuffle-{self.id}",
+                    task="spotifyAlbumShuffler.spotify.tasks.refresh_playlist",
+                    args=self.spotify_playlist_id,
+                )
+            periodic_task.crontab = schedule
+            periodic_task.save()
+            print("Added periodic task")
         else:
             try:
-                del app.conf.beat_schedule[f"album-shuffle-{self.id}"]
+                PeriodicTask.objects.filter(name=f"album-shuffle-{self.id}").delete()
             except KeyError:
                 pass
 
@@ -59,6 +76,7 @@ class SpotifyPlaylist(models.Model):
             del app.conf.beat_schedule[f"album-shuffle-{internal_id}"]
         except KeyError:
             pass
+
 
 class SpotifyAlbum(models.Model):
     id = models.AutoField(primary_key=True)
