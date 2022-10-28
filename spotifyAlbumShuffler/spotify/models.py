@@ -1,5 +1,11 @@
+import logging
+
+from celery.schedules import crontab
 from django.contrib.auth.models import User
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+
+from spotifyAlbumShuffler.celery import app
 
 
 class SpotifyUser(models.Model):
@@ -21,7 +27,38 @@ class SpotifyPlaylist(models.Model):
     playlist_name = models.CharField(max_length=200)
     playlist_picture_url = models.URLField(blank=True)
     last_playlist_picture_update = models.DateTimeField(blank=True, null=True)
+    playlist_schedule_minute = models.PositiveIntegerField(default=0, validators=[
+        MaxValueValidator(59),
+        MinValueValidator(0)
+    ])
+    playlist_schedule_hour = models.PositiveIntegerField(default=0, validators=[
+        MaxValueValidator(23),
+        MinValueValidator(0)
+    ])
 
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        logging.debug("Calling save method for SpotifyPlaylist")
+        super().save(force_insert, force_update, using, update_fields)
+        if self.enabled:
+            from spotifyAlbumShuffler.spotify.tasks import album_shuffle
+            app.add_periodic_task(
+                schedule=crontab(hour=self.playlist_schedule_hour, minute=self.playlist_schedule_minute),
+                sig=album_shuffle.s(self.spotify_playlist_id),
+                name=f"album-shuffle-{self.id}",
+            )
+        else:
+            try:
+                del app.conf.beat_schedule[f"album-shuffle-{self.id}"]
+            except KeyError:
+                pass
+
+    def delete(self, using=None, keep_parents=False):
+        internal_id = self.id
+        super().delete(using, keep_parents)
+        try:
+            del app.conf.beat_schedule[f"album-shuffle-{internal_id}"]
+        except KeyError:
+            pass
 
 class SpotifyAlbum(models.Model):
     id = models.AutoField(primary_key=True)

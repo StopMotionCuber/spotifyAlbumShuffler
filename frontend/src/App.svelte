@@ -8,6 +8,8 @@
   import {fetchPlaylists, b2bPlaylists} from "./stores";
 
   let loggedIn = false;
+  let showModal = false;
+  let cronModalPlaylistID = 0;
   let playlistsFetched = false;
   let playlistFetchMsg = "Fetching playlists...";
   let username = "";
@@ -17,7 +19,6 @@
     playlistsFetched = false;
     playlistFetchMsg = "Refreshing playlists..."
     await fetch("http://localhost/api/refresh/", {credentials: 'include'});
-    await fetchPlaylists(false);
     playlistsFetched = true;
     event.srcElement.disabled = false;
   }
@@ -27,6 +28,12 @@
     let results = await response.json();
     loggedIn = results['logged_in'];
     username = results['display_name'];
+  }
+
+  function openModal(event) {
+    console.log("Opening modal");
+    cronModalPlaylistID = event.detail.playlistID;
+    showModal = true;
   }
 
   async function main() {
@@ -60,7 +67,7 @@
     <div class="b2b-list">
       {#each $b2bPlaylists as {id, name, picture}, i}
         <PlaylistItem imgSource="{picture}" playlistName="{name}" backToBack="true"
-                      playlistID="{id}"/>
+                      playlistID="{id}" on:playlistClick={openModal}/>
       {/each}
     </div>
     <div class="general-interaction">
@@ -72,7 +79,9 @@
   {:else}
     <h3 class="heading">You need to login via Spotify to use the spotify album shuffler</h3>
   {/if}
-  <CronModal visible="true"/>
+  {#if showModal}
+  <CronModal visible="{showModal}" playlistID="{cronModalPlaylistID}" on:closed={() => showModal = false}/>
+  {/if}
 </main>
 
 <style>

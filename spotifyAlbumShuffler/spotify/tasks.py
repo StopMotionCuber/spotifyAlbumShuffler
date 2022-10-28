@@ -2,9 +2,11 @@ import logging
 
 import spotipy
 from celery import shared_task
+from celery.schedules import crontab
 from django.db import transaction
 from django.utils import timezone
 
+from spotifyAlbumShuffler.spotify import logic
 from spotifyAlbumShuffler.spotify.cache_handler import UserCacheHandler
 from spotifyAlbumShuffler.spotify.logic import InternalPlaylist, refresh_user_playlists
 from spotifyAlbumShuffler.spotify.models import SpotifyPlaylist, SpotifyUser
@@ -20,6 +22,12 @@ def get_spotipy_client(user: SpotifyUser):
             cache_handler=UserCacheHandler(user)
         )
     )
+
+
+@shared_task
+def album_shuffle(playlist_id: str):
+    playlist = SpotifyPlaylist.objects.get(spotify_playlist_id=playlist_id)
+    logic.shuffle_playlist(get_spotipy_client(playlist.owner), playlist)
 
 
 @shared_task
